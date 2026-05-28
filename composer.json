@@ -1,0 +1,47 @@
+{
+    "name": "rrq/vexagame",
+    "description": "Laravel package for VexaGame API integration - products, transactions, and balance management",
+    "keywords": [
+        "laravel",
+        "vexagame",
+        "api",
+        "game-topup",
+        "voucher",
+        "digital-product"
+    ],
+    "license": "MIT",
+    "type": "library",
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0|^11.0",
+        "illuminate/http": "^10.0|^11.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0|^11.0",
+        "mockery/mockery": "^1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rrq\\Vexagame\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Rrq\\Vexagame\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Rrq\\Vexagame\\VexaGameServiceProvider"
+            ],
+            "aliases": {
+                "VexaGame": "Rrq\\Vexagame\\Facades\\VexaGame"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
