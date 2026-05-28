@@ -22,6 +22,7 @@ Laravel package for VexaGame API V2 integration — manage products, transaction
   - [Check Nickname](#7-check-nickname)
 - [Error Handling](#error-handling)
 - [Callback Configuration](#callback-configuration)
+- [Testing](#testing)
 - [API Reference](#api-reference)
 
 ---
@@ -518,6 +519,22 @@ Contact VexaGame support to configure your callback URL. They will send transact
 **Base URLs:**
 - Production: `https://api.vexaagen.com`
 - Development: `https://dev.vexapay.vexatechno.com/api`
+
+---
+
+## Testing
+
+Tests run inside Docker (PHP 8.1). No local PHP required.
+
+```bash
+# Build image (one-time)
+docker compose build
+
+# Run tests
+docker compose run --rm php vendor/bin/phpunit
+```
+
+31 tests, 77 assertions. Uses MockHandler to mock GuzzleHTTP responses.
 
 ---
 

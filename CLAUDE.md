@@ -21,6 +21,9 @@ Laravel package (`rrq/vexagame`) for integrating with the VexaGame API V2. Used 
 ```
 rrq/vexagame/
 ├── composer.json              # Package metadata & autoload config
+├── docker-compose.yml         # Docker test environment
+├── .docker/
+│   └── Dockerfile.dev         # PHP 8.1 CLI with Composer
 ├── config/
 │   └── vexagame.php           # Publishable config (api_key, base_url, timeout)
 ├── src/
@@ -30,6 +33,11 @@ rrq/vexagame/
 │   │   └── VexaGameFacade.php # Laravel facade
 │   └── Exceptions/
 │       └── VexaGameException.php   # Custom exception with helper methods
+├── tests/
+│   ├── MockGuzzleClient.php   # Test trait for mocking GuzzleHTTP
+│   ├── VexaGameTest.php       # Unit tests for all API methods
+│   └── VexaGameExceptionTest.php  # Unit tests for exception helpers
+├── phpunit.xml                # PHPUnit configuration
 ├── README.md                  # User-facing documentation
 └── CLAUDE.md                  # This file
 ```
@@ -113,11 +121,19 @@ All API errors throw `VexaGameException`:
 
 ## Testing
 
+Tests run inside Docker (PHP 8.1). No local PHP required.
+
 ```bash
-composer test
-# or
-vendor/bin/phpunit
+# Build image (one-time)
+docker compose build
+
+# Run tests
+docker compose run --rm php vendor/bin/phpunit
 ```
+
+31 tests, 77 assertions. Uses MockHandler to mock GuzzleHTTP responses.</think><tool_call>
+<function=read>
+<parameter=filePath>/home/qdh/RRQ/vexagame/CLAUDE.md
 
 ---
 

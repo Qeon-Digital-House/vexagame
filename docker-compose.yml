@@ -1,0 +1,17 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile.dev
+      args:
+        PHP_VERSION: "${PHP_VERSION:-8.1}"
+    image: vexagame-dev:${PHP_VERSION:-8.1}
+    container_name: vexagame-dev
+    working_dir: /app
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    volumes:
+      - .:/app
+    environment:
+      COMPOSER_HOME: /app/.composer-cache
+      COMPOSER_CACHE_DIR: /app/.composer-cache/cache
+    entrypoint: ["php"]
