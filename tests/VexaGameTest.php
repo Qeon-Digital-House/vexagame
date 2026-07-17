@@ -181,6 +181,34 @@ class VexaGameTest extends TestCase
         $this->assertEquals('ORDER-001', $result['payload']['partner_ref_id']);
     }
 
+    public function testCreateTransactionWithPin(): void
+    {
+        $expected = [
+            'code' => 200,
+            'message' => 'Transaction created successfully',
+            'payload' => [
+                'id' => 78903,
+                'code' => 'TRX-20240101-003',
+                'product_code' => 'FF5',
+                'customer_no' => '132132144',
+                'status' => 'Dalam Proses',
+            ],
+        ];
+
+        $vexaGame = $this->createVexaGame(new MockHandler([
+            $this->mockResponse(200, $expected),
+        ]));
+
+        $result = $vexaGame->createTransaction(
+            code: 'FF5',
+            customerNo: '132132144',
+            pin: '123456'
+        );
+
+        $this->assertEquals(200, $result['code']);
+        $this->assertEquals('TRX-20240101-003', $result['payload']['code']);
+    }
+
     public function testGetTransactions(): void
     {
         $expected = [
