@@ -84,6 +84,7 @@ class VexaGame
      * @param int $qty Quantity (default: 1)
      * @param string|null $partnerRefId Your reference ID
      * @param int|null $maxPrice Maximum price limit
+     * @param string|null $pin Transaction PIN
      * @return array
      * @throws VexaGameException
      */
@@ -93,7 +94,8 @@ class VexaGame
         string $paymentMethod = 'balance',
         int $qty = 1,
         ?string $partnerRefId = null,
-        ?int $maxPrice = null
+        ?int $maxPrice = null,
+        ?string $pin = null
     ): array {
         $params = [
             'code' => $code,
@@ -108,6 +110,10 @@ class VexaGame
 
         if ($maxPrice !== null) {
             $params['max_price'] = $maxPrice;
+        }
+
+        if ($pin !== null) {
+            $params['pin'] = $pin;
         }
 
         return $this->request('POST', 'v2/transaction', $params);
