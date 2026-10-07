@@ -18,7 +18,7 @@ class VexaGameServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/vexagame.php', 'vexagame');
 
         $this->app->singleton(VexaGame::class, function ($app) {
-            return new VexaGame(config('vexagame'));
+            return new VexaGame(config('vexagame'), $app['events']);
         });
 
         $this->app->alias(VexaGame::class, 'vexagame');

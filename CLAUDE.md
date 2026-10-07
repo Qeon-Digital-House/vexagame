@@ -29,6 +29,8 @@ rrq/vexagame/
 ├── src/
 │   ├── VexaGame.php           # Main client class (all API methods)
 │   ├── VexaGameServiceProvider.php  # Laravel service provider
+│   ├── Events/
+│   │   └── RequestCompleted.php   # Fired after every API call (for logging)
 │   ├── Facades/
 │   │   └── VexaGameFacade.php # Laravel facade
 │   └── Exceptions/
@@ -36,7 +38,8 @@ rrq/vexagame/
 ├── tests/
 │   ├── MockGuzzleClient.php   # Test trait for mocking GuzzleHTTP
 │   ├── VexaGameTest.php       # Unit tests for all API methods
-│   └── VexaGameExceptionTest.php  # Unit tests for exception helpers
+│   ├── VexaGameExceptionTest.php  # Unit tests for exception helpers
+│   └── RequestCompletedEventTest.php  # Unit tests for the logging event
 ├── phpunit.xml                # PHPUnit configuration
 ├── README.md                  # User-facing documentation
 └── CLAUDE.md                  # This file
@@ -61,7 +64,17 @@ User Code
       → GuzzleHTTP Client
         → VexaGame API (api.vexaagen.com)
           → JSON Response or VexaGameException
+      → Events\RequestCompleted dispatched (success and failure)
 ```
+
+### Request Logging
+
+`request()` dispatches `Events\RequestCompleted` (method, url, params, statusCode,
+response, error, durationMs) through the dispatcher passed to the constructor —
+the service provider passes `$app['events']`. Consumers (rrq-topup) listen to it
+to write request logs. `pin` is redacted, the Authorization header is never
+included, and a throwing listener is swallowed so logging can never fail an
+order the provider already accepted.
 
 ### Core Operations
 
@@ -131,7 +144,7 @@ docker compose build
 docker compose run --rm php vendor/bin/phpunit
 ```
 
-31 tests, 77 assertions. Uses MockHandler to mock GuzzleHTTP responses.</think><tool_call>
+38 tests, 104 assertions. Uses MockHandler to mock GuzzleHTTP responses.</think><tool_call>
 <function=read>
 <parameter=filePath>/home/qdh/RRQ/vexagame/CLAUDE.md
 
