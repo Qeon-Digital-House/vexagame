@@ -21,6 +21,7 @@ Laravel package for VexaGame API V2 integration — manage products, transaction
   - [Get Transaction Detail](#6-get-transaction-detail)
   - [Check Nickname](#7-check-nickname)
 - [Error Handling](#error-handling)
+- [Request Logging](#request-logging)
 - [Callback Configuration](#callback-configuration)
 - [Testing](#testing)
 - [API Reference](#api-reference)
@@ -471,6 +472,37 @@ try {
 | 400 | `Maaf stok produk sudah habis` | Product out of stock |
 | 404 | `Product not found` | Invalid product code |
 | 500 | `Internal Server Error` | Server-side error, retry |
+
+---
+
+## Request Logging
+
+Every API call, successful or failed, dispatches `Rrq\Vexagame\Events\RequestCompleted`
+through Laravel's event dispatcher. Listen to it to write request logs:
+
+```php
+use Illuminate\Support\Facades\Event;
+use Rrq\Vexagame\Events\RequestCompleted;
+
+Event::listen(RequestCompleted::class, function (RequestCompleted $event) {
+    $event->method;      // "POST"
+    $event->url;         // "https://api.vexaagen.com/v2/transaction"
+    $event->params;      // query (GET) or JSON body (POST), `pin` redacted
+    $event->statusCode;  // 200, 400, ... or null when no response (timeout)
+    $event->response;    // decoded response body, or null
+    $event->error;       // error message, null on success
+    $event->durationMs;  // 312.5
+    $event->successful();
+});
+```
+
+- The `Authorization` header (API key) is never part of the event.
+- `pin` is replaced with `[REDACTED]` in `params`.
+- A listener that throws is swallowed: logging can never fail an API call
+  (an order the provider already accepted would otherwise look failed).
+- Listeners run synchronously inside the request — queue anything slow.
+- Outside Laravel, pass a dispatcher yourself: `new VexaGame($config, $dispatcher)`.
+  Without one, no event is fired.
 
 ---
 

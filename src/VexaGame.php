@@ -5,6 +5,8 @@ namespace Rrq\Vexagame;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
+use Illuminate\Contracts\Events\Dispatcher;
+use Rrq\Vexagame\Events\RequestCompleted;
 use Rrq\Vexagame\Exceptions\VexaGameException;
 
 class VexaGame
@@ -12,9 +14,16 @@ class VexaGame
     protected Client $client;
     protected string $apiKey;
     protected string $baseUrl;
+    protected ?Dispatcher $events;
 
-    public function __construct(array $config)
+    /**
+     * Request params that must never leave the client in an event.
+     */
+    protected const REDACTED_PARAMS = ['pin'];
+
+    public function __construct(array $config, ?Dispatcher $events = null)
     {
+        $this->events = $events;
         $this->apiKey = $config['api_key'] ?? '';
         $this->baseUrl = rtrim($config['base_url'] ?? 'https://api.vexaagen.com', '/');
 
@@ -205,6 +214,8 @@ class VexaGame
      */
     protected function request(string $method, string $endpoint, array $params = []): array
     {
+        $startedAt = microtime(true);
+
         try {
             $options = [];
 
@@ -217,9 +228,11 @@ class VexaGame
             $response = $this->client->request($method, $endpoint, $options);
             $body = $response->getBody()->getContents();
 
-            $decoded = json_decode($body, true);
+            $decoded = json_decode($body, true) ?? ['raw' => $body];
 
-            return $decoded ?? ['raw' => $body];
+            $this->dispatchRequestCompleted($method, $endpoint, $params, $response->getStatusCode(), $decoded, null, $startedAt);
+
+            return $decoded;
         } catch (GuzzleException $e) {
             $statusCode = $e->getCode();
             $responseBody = null;
@@ -232,12 +245,53 @@ class VexaGame
                 $message = $e->getMessage();
             }
 
+            $this->dispatchRequestCompleted($method, $endpoint, $params, $statusCode ?: null, $responseBody, $message, $startedAt);
+
             throw new VexaGameException(
                 $message,
                 $statusCode,
                 $responseBody,
                 $requestParams
             );
+        }
+    }
+
+    /**
+     * Announce a finished request for logging. A failing listener must never
+     * fail the API call: an order the provider already accepted would be
+     * reported to the caller as failed.
+     */
+    protected function dispatchRequestCompleted(
+        string $method,
+        string $endpoint,
+        array $params,
+        ?int $statusCode,
+        ?array $response,
+        ?string $error,
+        float $startedAt
+    ): void {
+        if ($this->events === null) {
+            return;
+        }
+
+        foreach (self::REDACTED_PARAMS as $key) {
+            if (array_key_exists($key, $params)) {
+                $params[$key] = '[REDACTED]';
+            }
+        }
+
+        try {
+            $this->events->dispatch(new RequestCompleted(
+                strtoupper($method),
+                $this->baseUrl . '/' . $endpoint,
+                $params,
+                $statusCode,
+                $response,
+                $error,
+                round((microtime(true) - $startedAt) * 1000, 2)
+            ));
+        } catch (\Throwable) {
+            // Logging is best effort.
         }
     }
 }
